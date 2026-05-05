@@ -48,7 +48,7 @@ UIWidget
     anchors.left: gameLeftPanels.right
     anchors.right: gameRightPanels.left
     anchors.top: parent.top
-    anchors.bottom: gameBottomPanel.top
+    anchors.bottom: parent.bottom
     focusable: false    
     
   Panel
@@ -175,12 +175,12 @@ UIWidget
       fit-children: true
     
   Panel
-    id: gameBottomPanel    
+    id: gameBottomPanel
     $!mobile:
-      anchors.left: gameBottomActionPanel.left
-      anchors.right: gameBottomActionPanel.right
-      anchors.top: gameBottomActionPanel.bottom
+      anchors.left: gameLeftPanels.right
       anchors.bottom: parent.bottom
+      width: 400
+      height: 150
 
     $mobile:
       anchors.left: gameLeftPanels.right
