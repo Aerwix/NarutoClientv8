@@ -23,6 +23,7 @@
 #include "localplayer.h"
 #include "map.h"
 #include "game.h"
+#include "spritemanager.h"
 #include "tile.h"
 #include <framework/core/eventdispatcher.h>
 #include <framework/graphics/graphics.h>
@@ -367,6 +368,21 @@ void LocalPlayer::updateWalk()
         return;
 
     Creature::updateWalk();
+
+    // fix float offset for pre-walking (opposite direction from Creature base)
+    if (isPreWalking()) {
+        float walkTicksPerPixel = ((float)(getStepDuration(false) + (g_game.getFeature(Otc::GameNewUpdateWalk) ? 0 : 10))) / (float)g_sprites.spriteSize();
+        float pixelsWalkedF = std::min((float)(m_walkTimer.ticksElapsed() / walkTicksPerPixel), (float)g_sprites.spriteSize());
+        m_walkOffsetF = PointF(0, 0);
+        if (m_walkDirection == Otc::North || m_walkDirection == Otc::NorthEast || m_walkDirection == Otc::NorthWest)
+            m_walkOffsetF.y = -pixelsWalkedF;
+        else if (m_walkDirection == Otc::South || m_walkDirection == Otc::SouthEast || m_walkDirection == Otc::SouthWest)
+            m_walkOffsetF.y = pixelsWalkedF;
+        if (m_walkDirection == Otc::East || m_walkDirection == Otc::NorthEast || m_walkDirection == Otc::SouthEast)
+            m_walkOffsetF.x = pixelsWalkedF;
+        else if (m_walkDirection == Otc::West || m_walkDirection == Otc::NorthWest || m_walkDirection == Otc::SouthWest)
+            m_walkOffsetF.x = -pixelsWalkedF;
+    }
 
     // terminate walk only when client and server side walk are completed
     if (m_walking && m_walkTimer.ticksElapsed() >= getStepDuration()) {

@@ -540,8 +540,10 @@ Rect MapView::calcFramebufferSource(const Size& destSize, bool inNextFrame)
 {
     float scaleFactor = g_sprites.spriteSize()/(float)g_sprites.spriteSize();
     Point drawOffset = ((m_drawDimension - m_visibleDimension - Size(1,1)).toPoint()/2) * g_sprites.spriteSize();
-    if(isFollowingCreature())
-        drawOffset += m_followingCreature->getWalkOffset(inNextFrame) * scaleFactor;
+    if(isFollowingCreature()) {
+        PointF floatOffset = m_followingCreature->getWalkOffsetF();
+        drawOffset += Point(std::round(floatOffset.x * scaleFactor), std::round(floatOffset.y * scaleFactor));
+    }
 
     Size srcSize = destSize;
     Size srcVisible = m_visibleDimension * g_sprites.spriteSize();

@@ -115,6 +115,7 @@ public:
     Point getDrawOffset();
     uint16 getStepDuration(bool ignoreDiagonal = false, Otc::Direction dir = Otc::InvalidDirection);
     Point getWalkOffset(bool inNextFrame = false) { return inNextFrame ? m_walkOffsetInNextFrame : m_walkOffset; }
+    PointF getWalkOffsetF() const { return m_walkOffsetF; }
     Position getLastStepFromPosition() { return m_lastStepFromPosition; }
     Position getLastStepToPosition() { return m_lastStepToPosition; }
     float getStepProgress() { return m_walkTimer.ticksElapsed() / getStepDuration(); }
@@ -264,6 +265,7 @@ protected:
     EventPtr m_disappearEvent;
     Point m_walkOffset;
     Point m_walkOffsetInNextFrame;
+    PointF m_walkOffsetF;
     Otc::Direction m_lastStepDirection;
     Position m_lastStepFromPosition;
     Position m_lastStepToPosition;
