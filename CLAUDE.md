@@ -16,10 +16,10 @@ cmake --preset windows-release
 cmake --build build/windows-release
 ```
 
-**Windows (ASAN/debug):**
+**Windows (Release + ASAN/debug):**
 ```sh
-cmake --preset windows-asan
-cmake --build build/windows-asan
+cmake --preset windows-release-asan
+cmake --build build/windows-release-asan
 ```
 
 **Linux (Release/Debug):**
@@ -65,12 +65,21 @@ Each module is a directory containing:
 - `.lua` files — the module code
 - `.otui` files — widget layout definitions (OTML syntax, CSS-like)
 
+Important `.otmod` flags:
+- `sandboxed: true` — module runs in its own isolated Lua environment (most game modules)
+- `reloadable: false` — module cannot be hot-reloaded (e.g. `corelib`, `updater`)
+- `autoload: true` — module loads automatically without being pulled in by a dependency
+- `load-later:` — lists modules to load after this one finishes (used by `game_interface` to sequence all HUD modules)
+
 Key modules:
 - `corelib` — base utilities, JSON, HTTP, keyboard, UI classes; **cannot be reloaded**
 - `gamelib` — game-layer abstractions over the C++ client API
-- `game_interface` — the main game window and HUD
+- `game_interface` — the main game window and HUD; orchestrates all other in-game modules via `load-later`
+- `game_console` — chat/channel system
+- `game_bot` — automation module (sandboxed executor with its own script runner)
+- `game_topbar` — top HUD bar (Tibia 12-style)
+- `game_healthinfo` — HP/mana bars and condition icons overlay
 - `client_entergame` — login/character selection screen
-- `game_bot` — automation module
 - `updater` — auto-update system
 
 ### Asset Pipeline (`data/`, `layouts/`)
@@ -79,17 +88,27 @@ Key modules:
 - `data/shaders/` — GLSL shaders
 - `layouts/mobile/` and `layouts/retro/` — theme overrides that shadow files in `data/`
 - Sprites are loaded from `.spr`/`.dat` files in `data/things/`
+- Images referenced from Lua/OTUI use paths like `/images/game/...`
 
 ## Key Development Patterns
 
 ### Adding a new feature
-Create a new module directory under `modules/`. Give it a `.otmod` with a priority in the 500–999 range and list any dependencies. All game API calls go through the C++ bindings exposed to Lua (see `src/framework/luaengine/` and `src/client/luafunctions.cpp`).
+Create a new module directory under `modules/`. Give it a `.otmod` with a priority in the 500–999 range and list any dependencies. All game API calls go through the C++ bindings exposed to Lua (see `src/framework/luaengine/` and `src/client/luafunctions_client.cpp`).
+
+### Module lifecycle
+Every module with a UI follows the same pattern: `init()` creates widgets and calls `connect()` to bind game events; `terminate()` calls `disconnect()` and destroys widgets. Widgets are loaded with `g_ui.loadUI('name', parentWidget)` or created with `g_ui.createWidget('StyleName', parent)`.
+
+### Anchoring UI to the game panels
+In-game panels attach to one of three anchors exposed by `game_interface`:
+- `modules.game_interface.getRightPanel()` — right sidebar
+- `modules.game_interface.getLeftPanel()` — left sidebar (bot window, etc.)
+- `modules.game_interface.getMapPanel()` — over the game map (overlays)
 
 ### OTML (OTClient Markup Language)
 Used for both config files (`data/config.otml`) and UI layouts (`.otui`). Syntax is indentation-based, similar to YAML with CSS-like property names. Widget trees are defined in `.otui`; styling rules in `.otmod`'s `@onLoad` or separate style sheets.
 
 ### Server / connection config
-Server address, updater URL, and crash-reporter URL are set at the top of `init.lua`.
+Server address, `APP_NAME`, `APP_VERSION`, and service URLs (updater, crash reporter, stats) are set in the `Services` and `Servers` tables at the top of `init.lua`. The updater only activates when `Services.updater` is non-empty and the client is running from a `.zip` archive.
 
 ### C++ ↔ Lua boundary
-New C++ functionality exposed to Lua must be registered in the appropriate `luafunctions.cpp` or `luabindings.cpp` file in `src/client/` or `src/framework/`. Follow the existing `registerClass` / `registerMethod` pattern used throughout those files.
+New C++ functionality exposed to Lua must be registered in the appropriate `luafunctions_client.cpp` or `luabindings.cpp` file in `src/client/` or `src/framework/`. Follow the existing `registerClass` / `registerMethod` pattern used throughout those files.
