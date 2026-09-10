@@ -4,7 +4,7 @@ local defaultOptions = {
   showFps = true,
   showPing = true,
   fullscreen = false,
-  classicView = not g_app.isMobile(),
+  classicView = false,
   cacheMap = g_app.isMobile(),
   classicControl = not g_app.isMobile(),
   smartWalk = false,
@@ -43,7 +43,7 @@ local defaultOptions = {
   turnDelay = 30,
   hotkeyDelay = 30,
     
-  wsadWalking = false,
+  wsadWalking = true,
   walkFirstStepDelay = 200,
   walkTurnDelay = 100,
   walkStairsDelay = 50,
@@ -52,7 +52,7 @@ local defaultOptions = {
 
   topBar = true,
 
-  actionbar1 = true,
+  actionbar1 = false,
   actionbar2 = false,
   actionbar3 = false,
   actionbar4 = false,
