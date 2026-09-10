@@ -136,7 +136,7 @@ MiniWindow
     SkillButton
       id: skillId1
       SkillNameLabel
-        !text: tr('Club Fighting')
+        !text: tr('Taijutsu')
       SkillValueLabel
       SkillPercentPanel
 
