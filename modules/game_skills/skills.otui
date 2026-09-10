@@ -121,7 +121,7 @@ MiniWindow
     SkillButton
       id: magiclevel
       SkillNameLabel
-        !text: tr('Magic Level')
+        !text: tr('Ninjutsu')
       SkillValueLabel
       SkillPercentPanel
         background-color: red
@@ -143,7 +143,7 @@ MiniWindow
     SkillButton
       id: skillId2
       SkillNameLabel
-        !text: tr('Sword Fighting')
+        !text: tr('Kenjutsu')
       SkillValueLabel
       SkillPercentPanel
 
@@ -157,7 +157,7 @@ MiniWindow
     SkillButton
       id: skillId4
       SkillNameLabel
-        !text: tr('Distance Fighting')
+        !text: tr('Throwing')
       SkillValueLabel
       SkillPercentPanel
 
