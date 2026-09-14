@@ -1,0 +1,539 @@
+# OTCLIENT V8 - LLM CONTEXT DOCUMENTATION
+
+This document provides complete context for understanding and working with OTClient V8.
+
+## 1. PROJECT ARCHITECTURE
+
+OTClient V8 is an Open Tibia game client written in C++ with a Lua scripting layer.
+
+### Directory Structure
+```
+d:\TIBIA\_REAL_PROJECT\V8\
+├── src/                    # C++ source code (client core)
+│   ├── framework/          # Base framework (287 files)
+│   │   ├── ui/            # UI system (UIWidget, UIManager, layouts)
+│   │   ├── graphics/      # Graphics pipeline (OpenGL, textures, shaders)
+│   │   ├── otml/          # OTML/OTUI parser
+│   │   ├── luaengine/     # Integrated Lua engine
+│   │   ├── net/           # Networking
+│   │   ├── sound/         # Audio system
+│   │   └── platform/      # Platform abstraction
+│   ├── client/            # Client-specific logic (89 files)
+│   │   ├── creature.cpp/h # Creatures and players
+│   │   ├── localplayer.*  # Local player (walking, stats, etc.)
+│   │   ├── map.cpp/h      # Map system
+│   │   ├── mapview.cpp/h  # Map rendering
+│   │   ├── tile.cpp/h     # Map tiles
+│   │   └── ui*.cpp/h      # Game-specific widgets
+│   └── main.cpp           # Entry point
+├── modules/               # Lua modules (55 modules)
+│   ├── corelib/          # Core Lua library
+│   ├── gamelib/          # Game Lua library
+│   ├── client_*/         # Client modules
+│   └── game_*/           # Game modules
+├── data/                  # Game data (sprites, items, etc.)
+├── layouts/               # Visual layouts (retro, mobile)
+├── mods/                  # Optional mods
+└── init.lua              # Main startup script
+```
+
+## 2. LUA MODULE SYSTEM
+
+### Module Structure
+Each module folder contains:
+- name.otmod (definition), name.lua (code), name.otui (UI, optional)
+- styles/*.otui, widgets/*.lua (optional)
+
+### .otmod Format
+```otml
+Module
+  name: module_name
+  description: Description
+  author: Author
+  sandboxed: true
+  reloadable: false
+  autoload: true
+  autoload-priority: 500    # 0-99: libs, 100-499: client, 500-999: game, 1000+: mods
+  scripts: [file1, file2]
+  load-later: [other_module]
+  @onLoad: init()
+  @onUnload: terminate()
+```
+
+### Module Functions
+```lua
+g_modules.discoverModules()       -- Discover all modules
+g_modules.autoLoadModules(999)    -- Load modules up to priority
+g_modules.ensureModuleLoaded("x") -- Ensure module is loaded
+g_modules.getModule("name")       -- Get module reference
+g_modules.unloadModules()         -- Unload modules
+g_modules.reloadModules()         -- Reload modules
+```
+
+### Module Example
+```lua
+function init()
+  connect(g_game, { onGameStart = onGameStart })
+  g_ui.loadUI('my_module')
+end
+
+function terminate()
+  disconnect(g_game, { onGameStart = onGameStart })
+  myWidget:destroy()
+end
+```
+
+## 3. OTUI SYSTEM
+
+OTUI (Open Tibia User Interface) is a declarative UI system using .otui files.
+
+### Basic Syntax
+```otui
+WidgetName < ParentType
+  id: myId
+  size: 200 100
+  text: "Hello"
+  image-source: /path/img
+  anchors.fill: parent
+  anchors.centerIn: parent
+  
+  UIWidget
+    id: childWidget
+```
+
+### Base Widget Types (C++)
+UIWidget, UIWindow, UIButton, UILabel, UITextEdit, UICheckBox, UIScrollArea, UIScrollBar, UIProgressBar, UIComboBox, UITabBar, UIGridLayout
+
+### Game-Specific Widgets
+UIGameMap, UIItem, UICreature, UIMinimap, UIGraph, UISprite, UIProgressRect
+
+### Lua Widgets (corelib/ui/)
+UIMiniWindow, UIMiniWindowContainer, UIMovableTabBar, UIPopupMenu, UIInputBox, UIMessageBox, UISpinBox, UITable, UIRadioGroup, UIResizeBorder, UISplitter
+
+### Main Properties
+```
+# Dimensions: size, width, height, min-width, min-height, max-width, max-height
+# Position: position, margin(-top/right/bottom/left), padding(-top/right/bottom/left)
+# Appearance: opacity, color, background-color, visible, enabled, focusable, phantom, clipping, rotation
+# Image: image-source, image-clip, image-color, image-border, image-repeated, image-smooth, image-offset
+# Text: text, text-align, text-offset, text-wrap, text-auto-resize, font
+# Icons: icon, icon-color, icon-offset, icon-size, icon-align
+# Borders: border-width(-top/right/bottom/left), border-color(-top/right/bottom/left)
+```
+
+### Layouts
+```otui
+layout:
+  type: verticalBox / horizontalBox / grid / anchor
+  spacing: 5
+  fit-children: true
+  cell-size: 32 32      # grid
+  num-columns: 4        # grid
+```
+
+### Conditional States
+```otui
+$hover: / $pressed: / $disabled: / $checked: / $on: / $!on: / $focus: / $first: / $last: / $mobile: / $!mobile:
+```
+
+### OTUI Events
+```otui
+@onClick: / @onDoubleClick: / @onSetup: / @onFocusChange: / @onTextChange: / @onGeometryChange:
+```
+
+### OTUI Variables
+```lua
+g_ui.addOTUIVar("primaryColor", "#FF5500")
+g_ui.getOTUIVar("primaryColor")
+-- In OTUI: color: {tovar(primaryColor)}
+```
+
+### Loading UI
+```lua
+g_ui.loadUI('path/file')
+g_ui.loadUI('path/file', parentWidget)
+g_ui.createWidget('StyleName', parentWidget)
+g_ui.importStyle('/path/to/styles.otui')
+```
+
+### UIWidget Methods (200+)
+```lua
+-- Hierarchy: setId, getId, setParent, getParent, addChild, removeChild, getChildren, getChildById, recursiveGetChildById
+-- Geometry: setSize, getSize, setWidth, getWidth, setHeight, getHeight, setPosition, getPosition, setRect, getRect
+-- Visibility: setVisible, isVisible, show, hide, setEnabled, isEnabled, enable, disable
+-- State: setFocusable, setPhantom, setDraggable, setClipping
+-- Style: setOpacity, setColor, setBackgroundColor, setRotation
+-- Image: setImageSource, setImageClip, setImageColor, setImageOffset, setImageBorder, setImageRepeated
+-- Text: setText, getText, setTextAlign, setTextOffset, setTextWrap, setFont, setColoredText, resizeToText
+-- Margin/Padding: setMargin, setMarginTop/Right/Bottom/Left, setPadding, setPaddingTop/Right/Bottom/Left
+-- Icons: setIcon, setIconColor, setIconAlign
+-- Borders: setBorderWidth, setBorderColor
+-- States: setOn, isOn, setChecked, isChecked, isHovered, isPressed, isFocused
+-- Actions: focus, lower, raise, lock, unlock, grabMouse, grabKeyboard, destroy, destroyChildren
+-- Layout: setLayout, getLayout, updateLayout, addAnchor, removeAnchor, fill, centerIn, breakAnchors
+-- Style: mergeStyle, applyStyle, setStyle
+```
+
+## 4. LAYOUT SYSTEM
+
+Layouts in /layouts/ (retro/, mobile/) contain images/ and styles/*.otui
+
+```lua
+DEFAULT_LAYOUT = "retro"
+g_resources.setLayout("retro")
+g_resources.getLayout()
+```
+
+## 5. WALKING SYSTEM
+
+Files: modules/game_walking/walking.lua, src/client/localplayer.cpp
+
+### Concepts
+- preWalk: Predictive movement before server confirmation
+- serverWalk: Server-confirmed movement
+- smartWalk: Key combination for diagonals
+- walkLock: Temporary movement block
+- dash: Fast mode without waiting
+
+### Direction Constants
+North=0, East=1, South=2, West=3, NorthEast=4, SouthEast=5, SouthWest=6, NorthWest=7
+
+### Key Variables
+```lua
+smartWalkDirs, smartWalkDir, wsadWalking, nextWalkDir, lastWalkDir
+lastFinishedStep, walkLock, walkEvent, lastWalk, lastTurn, firstStep
+```
+
+### Main Functions
+```lua
+walk(dir, ticks), smartWalk(dir, ticks), changeWalkDir(dir, pop), turn(dir, repeated), onWalkFinish(player)
+```
+
+### Walking Settings
+```lua
+g_settings.getNumber('walkFirstStepDelay/walkTurnDelay/walkTeleportDelay/walkStairsDelay/walkCtrlTurnDelay')
+g_settings.getBoolean('dash/smartWalk')
+```
+
+### LocalPlayer Methods (C++)
+```lua
+player:canWalk(direction), player:preWalk(direction), player:walk(oldPos, newPos)
+player:cancelWalk(direction), player:stopWalk(), player:autoWalk(destination), player:stopAutoWalk()
+player:lockWalk(millis), player:isWalkLocked(), player:isWalking(), player:isAutoWalking()
+player:isServerWalking(), player:finishServerWalking(), player:getWalkDirection(), player:getStepTicksLeft()
+```
+
+## 6. GRAPHICS SYSTEM
+
+Pipeline: MapView → UIManager → DrawQueue → Painter (OpenGL)
+
+### Framework Files (src/framework/graphics/)
+graphics, painter, texture, texturemanager, framebuffer, shader, shaderprogram, shadermanager, bitmapfont, fontmanager, image, atlas, coordsbuffer, drawqueue
+
+### Client Files (src/client/)
+mapview, map, tile, thingtype, spritemanager, lightview, creature, item, outfit
+
+### Graphics Functions
+```lua
+g_textures.preload("/path"), g_textures.clearCache(), g_textures.reload()
+g_shaders.createShader("name", "/path.frag"), g_shaders.createOutfitShader("name", "/path.frag")
+g_fonts.importFont("/path.otfont"), g_fonts.setDefaultFont("name"), g_fonts.fontExists("name")
+g_graphics.getVendor(), g_graphics.getRenderer(), g_graphics.getVersion()
+```
+
+### MapView Methods
+```lua
+mapView:setVisibleDimension(size), mapView:optimizeForSize(size), mapView:followCreature(creature)
+mapView:setCameraPosition(position), mapView:getPosition(point, size), mapView:move(x, y)
+mapView:lockFirstVisibleFloor(floor), mapView:setDrawLights(bool), mapView:setShader("name")
+```
+
+## 7. CONSTANTS AND ENUMS
+
+### Corelib (modules/corelib/const.lua)
+```lua
+-- Anchors: AnchorNone=0, AnchorTop=1, AnchorBottom=2, AnchorLeft=3, AnchorRight=4, AnchorVerticalCenter=5, AnchorHorizontalCenter=6
+-- Alignment: AlignNone=0, AlignLeft=1, AlignRight=2, AlignTop=4, AlignBottom=8, AlignHorizontalCenter=16, AlignVerticalCenter=32, AlignCenter=48
+-- Mouse: MouseNoButton=0, MouseLeftButton=1, MouseRightButton=2, MouseMidButton=3, MouseTouch=4
+-- Keyboard: KeyboardNoModifier=0, KeyboardCtrlModifier=1, KeyboardAltModifier=2, KeyboardShiftModifier=4
+-- Log: LogDebug=0, LogInfo=1, LogWarning=2, LogError=3, LogFatal=4
+```
+
+### Gamelib (modules/gamelib/const.lua)
+```lua
+-- Directions: North=0, East=1, South=2, West=3, NorthEast=4, SouthEast=5, SouthWest=6, NorthWest=7
+-- Skulls: SkullNone=0, SkullYellow=1, SkullGreen=2, SkullWhite=3, SkullRed=4, SkullBlack=5, SkullOrange=6
+-- Combat: FightOffensive=1, FightBalanced=2, FightDefensive=3, DontChase=0, ChaseOpponent=1
+-- MessageModes: Say=1, Whisper=2, Yell=3, PrivateFrom=4, Channel=7, Warning=17, Game=18, Look=20, Guild=31
+-- GameFeatures: GameProtocolChecksum=1, GameAccountNames=2, GameClientPing=24, GameNewWalking=90, GameBot=95
+```
+
+## 8. LUA GLOBAL APIS
+
+### Main Singletons
+g_app, g_game, g_map, g_things, g_sprites, g_ui, g_resources, g_configs, g_settings, g_modules, g_window, g_keyboard, g_mouse, g_clock, g_crypt, g_logger, g_sound, g_fonts, g_textures, g_shaders, g_platform, g_dispatcher
+
+### g_app
+```lua
+g_app.setName/getName/getVersion/exit/restart/isMobile/setMaxFps/getMaxFps/getFps/doScreenshot/scale
+```
+
+### g_window
+```lua
+g_window.setTitle/setFullscreen/setVerticalSync/move/resize/show/hide/maximize/minimize
+g_window.isFullscreen/isMaximized/getSize/getPosition/getDisplaySize/getMousePosition
+g_window.setClipboardText/getClipboardText/flash
+```
+
+### g_resources
+```lua
+g_resources.fileExists/directoryExists/listDirectoryFiles/readFileContents/writeFileContents
+g_resources.makeDir/deleteFile/resolvePath/getWorkDir/getWriteDir/setLayout/getLayout
+```
+
+### g_configs/g_settings
+```lua
+config = g_configs.load("/path")
+config:getValue/setValue/getList/setList/exists/remove/save
+g_settings.get/set/getNumber/getBoolean/getString
+```
+
+### g_dispatcher (events)
+```lua
+addEvent(function() end)
+scheduleEvent(function() end, 1000)
+cycleEvent(function() end, 1000)
+removeEvent(event) / event:cancel()
+```
+
+### g_game
+```lua
+g_game.isOnline/isLogging/isDead/getLocalPlayer/getServerBeat/getClientVersion/getProtocolVersion
+g_game.getFeature/setFeature/enableFeature/disableFeature
+g_game.walk/turn/stop/forceWalk/autoWalk/look/use/useWith/attack/cancelAttack/follow/cancelFollow
+g_game.talk/talkChannel/talkPrivate/getContainers/getCreatures/getBlessings/getVocation
+```
+
+### g_map
+```lua
+g_map.getTile/getTiles/getSpectators/getCreatureById/getCreatureByName/findPath
+g_map.isLookPossible/isCovered/isCompletelyCovered/clean/cleanTile
+```
+
+### g_keyboard
+```lua
+g_keyboard.isKeyPressed/isKeySetPressed/getModifiers
+g_keyboard.bindKeyDown/bindKeyUp/bindKeyPress/unbindKeyDown/unbindKeyUp/unbindKeyPress
+```
+
+### g_mouse
+```lua
+g_mouse.isPressed/pushCursor/popCursor/loadCursors/addCursor
+```
+
+### g_clock
+```lua
+g_clock.millis/micros/seconds/realMillis
+```
+
+### g_logger
+```lua
+g_logger.debug/info/warning/error/fatal/setLogFile
+```
+
+### g_sound
+```lua
+g_sound.play("/path", channel)
+channel = g_sound.getChannel(id)  -- 1=Music, 2=Ambient, 3=Effect, 4=Bot
+channel:setGain/setEnabled/enqueue
+```
+
+## 9. EVENTS AND CALLBACKS
+
+### Connection
+```lua
+connect(object, { onEvent1 = handler1, onEvent2 = handler2 })
+disconnect(object, { onEvent1 = handler1 })
+```
+
+### g_game Events
+onGameStart, onGameEnd, onLogin, onLogout, onDeath, onTextMessage, onTalk, onAddCreature, onRemoveCreature, onCreatureMove, onCreatureHealthChange, onCreatureAppear, onCreatureDisappear, onCreatureTurn, onContainerOpen, onContainerClose, onContainerAddItem, onOpenNpcTrade, onCloseNpcTrade, onChannelJoin, onChannelLeave, onTeleport
+
+### LocalPlayer Events
+onPositionChange, onWalk, onWalkFinish, onCancelWalk, onHealthChange, onManaChange, onSkillChange, onInventoryChange, onStatesChange, onVocationChange
+
+### UIWidget Events
+onClick, onDoubleClick, onMousePress, onMouseRelease, onMouseMove, onMouseWheel, onKeyDown, onKeyUp, onKeyPress, onKeyText, onFocusChange, onHoverChange, onTextChange, onGeometryChange, onVisibilityChange, onStyleApply, onSetup, onDestroy, onDragEnter, onDragLeave, onDragMove, onDrop
+
+## 10. UTILITY FUNCTIONS
+
+### Table (modules/corelib/table.lua)
+table.copy, table.deepcopy, table.merge, table.contains, table.find, table.removevalue, table.shuffle, table.keys, table.values, table.size, table.toString
+
+### String (modules/corelib/string.lua)
+string.split, string.trim, string.starts, string.ends, string.explode
+
+### Util (modules/corelib/util.lua)
+tostring, tonumber, toboolean, torect, topoint, tocolor, tosize, tovar
+dofile, dofiles, pairsByKeys, shuffledPairs, signalcall, safecall, pcall
+tr, trn, formatDate, formatTime
+
+## 11. KEYBINDS
+
+### Keybind System
+```lua
+Keybind.new(category, action, {[CHAT_MODE.ON]="", [CHAT_MODE.OFF]="W"}, {[CHAT_MODE.ON]="Numpad8"}, true)
+Keybind.bind(category, action, {{type=KEY_DOWN, callback=fn, alone=true}}, widget)
+Keybind.unbind(category, action)
+Keybind.delete(category, action)
+Keybind.getKeybindKeys(category, action)  -- returns {primary, secondary}
+```
+
+### Key Codes
+KeyEscape=1, KeyTab=2, KeyBackspace=3, KeyEnter=5, KeyInsert=6, KeyDelete=7, KeyHome=10, KeyEnd=11
+KeyPageUp=12, KeyPageDown=13, KeyUp=14, KeyDown=15, KeyLeft=16, KeyRight=17, KeySpace=32
+KeyA-Z=65-90, Key0-9=48-57, KeyF1-F12=128-140, KeyNumpad0-9=141-150
+
+## 12. MAIN GAME CLASSES
+
+### Creature
+getId, getName, setName, getHealthPercent, getSpeed, getDirection, setDirection, getPosition, getTile, getOutfit, setOutfit, isWalking, isRemoved, isNpc, isMonster, isPlayer, isLocalPlayer, isHidden, getSkull, getShield, getEmblem, getType, getManaPercent
+
+### LocalPlayer
+getHealth, getMaxHealth, getMana, getMaxMana, getLevel, getLevelPercent, getExperience, getCapacity, getTotalCapacity, getSoul, getStamina, getSkillLevel, getSkillLevelPercent, getSkillBaseLevel, getVocation, isPremium, getInventoryItem, getStates, hasState, getBlessings, getSpells, getMagicLevel, getBaseMagicLevel, getMagicLevelPercent
+
+### Item
+getId, getClientId, getServerId, getCount, isStackable, isMarketable, isContainer, isFluidContainer, isMultiUse, getName, getTooltip, asContainer
+
+### Tile
+getPosition, getGround, getThings, getItems, getCreatures, getTopThing, getTopUseThing, getTopMoveThing, getTopCreature, isWalkable, isBlocking, isEmpty, isFullGround, hasCreature, hasElevation
+
+### Container
+getId, getName, getCapacity, getItemsCount, getItems, getItem, getContainerItem, hasParent, isUnlocked, hasPages, getSize, getFirstIndex
+
+## 13. CUSTOM WIDGETS
+
+```lua
+UIMyWidget = extends(UIWidget, "UIMyWidget")
+
+function UIMyWidget.create()
+  local widget = UIMyWidget.internalCreate()
+  widget.customValue = 0
+  return widget
+end
+
+function UIMyWidget:onStyleApply(styleName, styleNode)
+  for name, value in pairs(styleNode:asTable()) do
+    if name == 'my-custom-property' then self:setCustomValue(tonumber(value)) end
+  end
+end
+
+-- Register in .otmod: scripts: [widgets/my_widget]
+-- Use in OTUI: UIMyWidget { id: widget; my-custom-property: 50 }
+```
+
+### Extend C++ Widget
+```lua
+function UIWidget:myNewMethod() end
+local orig = UIWidget.setText
+function UIWidget:setText(text) orig(self, text) end
+```
+
+## 14. COMMUNICATION PROTOCOL
+
+### Extended Opcodes
+```lua
+local msg = OutputMessage.create()
+msg:addU8(ExtendedIds.Game)
+msg:addString("data")
+g_game.getProtocolGame():safeSend(msg)
+
+ProtocolGame.registerExtendedOpcode(ExtendedIds.Game, function(protocol, msg)
+  local data = msg:getString()
+end)
+```
+
+### OutputMessage
+addU8, addU16, addU32, addU64, addString, addPaddingBytes, addPosition
+
+### InputMessage
+getU8, getU16, getU32, getU64, getString, peekU8, skipBytes, getPosition, eof
+
+## 15. DATA STRUCTURES
+
+```lua
+Position(100, 100, 7)  -- pos.x, pos.y, pos.z, pos:isValid(), pos:getDistance(other)
+Rect(0, 0, 100, 100)
+Point(50, 50)
+Size(100, 100)
+Color(255, 85, 0, 128) -- or "#FF5500" / "#FF550088"
+outfit = {type=130, head=0, body=0, legs=0, feet=0, addons=0, mount=0, wings=0, aura=0}
+```
+
+## 16. DEBUGGING
+
+### Terminal (Ctrl+`)
+```lua
+print(value)
+g_ui.setDebugBoxesDrawing(true)
+g_game.getLocalPlayer():getPosition()
+```
+
+### Logging
+```lua
+g_logger.info/warning/error/debug/fatal
+g_logger.setLogFile("/path/log.txt")
+```
+
+### Hot Reload
+```lua
+local module = g_modules.getModule("module")
+if module:canReload() then module:reload() end
+```
+
+### Stats
+g_stats.types, g_stats.get, g_stats.clear, g_stats.getSlow, g_stats.getWidgetsInfo
+
+## 17. COMMON PATTERNS
+
+### Module with Window
+```lua
+local window = nil
+function init()
+  window = g_ui.loadUI('my_module', modules.game_interface.getRightPanel())
+  connect(g_game, { onGameEnd = hide })
+end
+function terminate() disconnect(g_game, {onGameEnd=hide}); if window then window:destroy() end end
+function show() window:show(); window:raise(); window:focus() end
+function hide() window:hide() end
+function toggle() if window:isVisible() then hide() else show() end end
+```
+
+### Periodic Update
+```lua
+local updateEvent = nil
+function init() updateEvent = cycleEvent(updateStats, 1000) end
+function terminate() removeEvent(updateEvent) end
+```
+
+### Dialogs
+```lua
+displayInfoBox("Title", "Message")
+displayErrorBox("Error", "Message")
+displayGeneralBox("Confirm", "Sure?", {{text="Yes", callback=fn}, {text="No", callback=fn}})
+displayInputBox("Input", "Enter:", function(w) local v = w:getText() end)
+```
+
+## 18. QUICK REFERENCES
+
+### Inventory Slots
+Head=1, Neck=2, Back=3, Body=4, Right=5, Left=6, Leg=7, Feet=8, Finger=9, Ammo=10, Purse=11
+
+### Skills
+Fist=0, Club=1, Sword=2, Axe=3, Distance=4, Shielding=5, Fishing=6
+
+### Sound Channels
+Music=1, Ambient=2, Effect=3, Bot=4
+
+---
+For systems not covered: src/framework/luafunctions.cpp, src/client/luafunctions_client.cpp, modules/corelib/, modules/gamelib/
