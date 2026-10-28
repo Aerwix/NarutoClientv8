@@ -1,0 +1,9 @@
+Module
+  name: game_guildTitle
+  description: Guild Titles for Players
+  author: Klank
+  sandboxed: true
+  autoload: true
+  scripts: [ guildTitle ]
+  @onLoad: init()
+  @onUnload: terminate()
