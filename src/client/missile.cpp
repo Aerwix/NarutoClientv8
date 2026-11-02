@@ -25,6 +25,8 @@
 #include "map.h"
 #include "tile.h"
 #include "spritemanager.h"
+#include "game.h"
+#include "animator.h"
 #include <framework/core/clock.h>
 #include <framework/core/eventdispatcher.h>
 
@@ -63,8 +65,28 @@ void Missile::draw(const Point& dest, bool animate, LightView* lightView)
         yPattern = 1;
     }
 
-    float fraction = m_animationTimer.ticksElapsed() / m_duration;
-    rawGetThingType()->draw(dest + m_delta * fraction, 0, xPattern, yPattern, 0, 0, Color::white, lightView);
+    ThingType* type = rawGetThingType();
+
+    const ticks_t elapsed = m_animationTimer.ticksElapsed();
+
+    int animationPhase = 0;
+    const int animationPhases = type->getAnimationPhases();
+    if(animationPhases > 1) {
+        const AnimatorPtr& animator = type->getAnimator();
+        if(g_game.getFeature(Otc::GameEnhancedAnimations) && animator && animator->getTotalDuration() > 0) {
+            // stateless: position within the cycle from flight time, so it always loops
+            // and a lag spike can't leave getPhaseAt() exhausted
+            Timer cycle;
+            cycle.adjust(-(elapsed % animator->getTotalDuration()));
+            animationPhase = std::max<int>(0, animator->getPhaseAt(cycle, 0));
+        } else {
+            // dat has no usable phase durations, loop at a fixed rate for the whole flight
+            animationPhase = (int)((elapsed / TICKS_PER_FRAME) % animationPhases);
+        }
+    }
+
+    float fraction = elapsed / m_duration;
+    type->draw(dest + m_delta * fraction, 0, xPattern, yPattern, 0, animationPhase, Color::white, lightView);
 }
 
 void Missile::setPath(const Position& fromPosition, const Position& toPosition)
