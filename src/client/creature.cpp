@@ -487,7 +487,12 @@ int Creature::getWalkAnimationPhases()
 {
     if (!getAnimator())
         return getAnimationPhases();
-    return getAnimator()->getAnimationPhases() + (g_game.getFeature(Otc::GameIdleAnimations) ? 1 : 0);
+    int phases = getAnimator()->getAnimationPhases();
+    // reserve the idle frame only when the outfit really has one (idle + moving frame groups),
+    // otherwise the walk cycle reaches a phase that doesn't exist and the outfit blinks
+    if (g_game.getFeature(Otc::GameIdleAnimations) && getAnimationPhases() > phases)
+        phases += 1;
+    return phases;
 }
 
 void Creature::updateWalkAnimation(uint8 totalPixelsWalked)
