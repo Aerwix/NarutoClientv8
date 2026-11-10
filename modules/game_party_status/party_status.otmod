@@ -1,0 +1,13 @@
+Module
+  name: game_party_status
+  description: Party Status (miembros + cruces en el minimapa)
+  author: Sorky | adaptado a OTCv8
+  sandboxed: true
+  autoload: true
+  autoload-priority: 1000
+  dependencies:
+    - game_interface
+    - game_minimap
+  scripts: [ party_status ]
+  @onLoad: init()
+  @onUnload: terminate()

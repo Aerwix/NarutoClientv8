@@ -1,0 +1,103 @@
+PartyMinimapMarker < UIWidget
+  size: 15 15
+  focusable: false
+  phantom: false
+
+  UIWidget
+    id: outline
+    image-source: /images/game/minimap/cross
+    image-color: #000000
+    size: 15 15
+    anchors.centerIn: parent
+    phantom: true
+
+  UIWidget
+    id: cross
+    image-source: /images/game/minimap/cross
+    size: 12 12
+    anchors.centerIn: parent
+    phantom: true
+
+PartyStatusBar < ProgressBar
+  height: 11
+  margin-top: 2
+  font: small-9px
+  text-offset: 0 1
+  color: white
+  anchors.left: parent.left
+  anchors.right: parent.right
+
+PartyMemberPanel < Panel
+  height: 42
+  margin-top: 3
+  padding: 3
+  background-color: #00000055
+
+  UIWidget
+    id: colorIcon
+    image-source: /images/game/minimap/cross
+    size: 10 10
+    anchors.left: parent.left
+    anchors.top: parent.top
+    margin-top: 1
+    phantom: true
+
+  Label
+    id: floorLabel
+    font: verdana-11px-rounded
+    color: #aaaaaa
+    text-auto-resize: true
+    anchors.right: parent.right
+    anchors.top: parent.top
+
+  Label
+    id: nameLabel
+    font: verdana-11px-rounded
+    color: white
+    height: 12
+    anchors.left: colorIcon.right
+    anchors.right: floorLabel.left
+    anchors.top: parent.top
+    margin-left: 4
+    margin-right: 2
+
+  PartyStatusBar
+    id: healthBar
+    background-color: #c83200
+    anchors.top: nameLabel.bottom
+
+  PartyStatusBar
+    id: manaBar
+    background-color: #2d64c8
+    anchors.top: healthBar.bottom
+
+MiniWindow
+  id: partyStatusWindow
+  !text: tr('Party')
+  height: 150
+  icon: /images/topbuttons/viplist
+  @onOpen: modules.game_party_status.onMiniWindowOpen()
+  @onClose: modules.game_party_status.onMiniWindowClose()
+  &save: true
+  &autoOpen: false
+
+  MiniWindowContents
+    padding-left: 5
+    padding-right: 5
+    padding-bottom: 3
+    layout: verticalBox
+
+    Label
+      id: emptyLabel
+      !text: tr('Sin party')
+      font: verdana-11px-rounded
+      color: #aaaaaa
+      text-align: center
+      height: 16
+      margin-top: 4
+
+    Panel
+      id: membersPanel
+      layout:
+        type: verticalBox
+        fit-children: true
