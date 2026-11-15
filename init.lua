@@ -1,22 +1,23 @@
 -- CONFIG
 APP_NAME = "Naruto Shadow Rising"  -- important, change it, it's name for config dir and files in appdata
-APP_VERSION = 1341       -- client version for updater and login to identify outdated client
+APP_VERSION = 0001       -- client version for updater and login to identify outdated client
 DEFAULT_LAYOUT = "mobile" -- on android it's forced to "mobile", check code bellow
+g_app.setVersion("0.0.1")
 
 -- If you don't use updater or other service, set it to updater = ""
 Services = {
-  website = "https://docs.opentibiabr.com/",
-  updater = "",--"http://yourwebsite/api/updater.php"
+  website = "https://aerwix.com/",
+  updater = "https://aerwix.com/updater/updater.php",--"https://aerwix.com/updater/updater.php"
   stats = "", -- --"http://yourwebsite/api/stats.php"
   crash = "", --"http://yourwebsite/api/crash.php",
   feedback = "",--"http://yourwebsite/api/feedback.php",
-  status = "http://docs.opentibiabr.com" --http://yourwebsite/api/status.php"
+  status = "" --http://yourwebsite/api/status.php"
 }
 
 -- Servers accept http login url, websocket login url or ip:port:version
 Servers = {
-  NSR = "aerwix.com:7171:1098",
-  LocalTestServ = "127.0.0.1:7171:1098"
+  AERWIX = "aerwix.com:7171:1098",
+  LocalTestServ = "127.0.0.1:7171:1098",
 }
 
 --Server = "ws://yourwebsite:3000/"
@@ -24,7 +25,7 @@ Servers = {
 --USE_NEW_ENERGAME = true -- uses entergamev2 based on websockets instead of entergame
 ALLOW_CUSTOM_SERVERS = false -- if true it shows option ANOTHER on server list
 
-g_app.setName("Shinobi World")
+g_app.setName("Naruto Shadow Rising")
 -- CONFIG END
 
 -- print first terminal message
