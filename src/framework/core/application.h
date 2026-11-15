@@ -64,7 +64,7 @@ public:
     std::string getBuildType() { return "FULL"; }
 #endif
     std::string getBuildArch() { return BUILD_ARCH; }
-    std::string getAuthor() { return "docs.opentibiabr.com"; }
+    std::string getAuthor() { return "Aerwix"; }
     std::string getOs();
     std::string getStartupOptions() { return m_startupOptions; }
 
