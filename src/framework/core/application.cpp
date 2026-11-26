@@ -184,7 +184,13 @@ void Application::close()
 
 void Application::restart()
 {
-#if not(defined(ANDROID) || defined(FREE_VERSION))
+#if defined(WIN32) && not(defined(FREE_VERSION))
+    // std::system() abre cmd.exe y se queda esperando a que el nuevo cliente termine,
+    // dejando una ventana de consola abierta. ShellExecute lanza el proceso sin consola.
+    if (!g_platform.spawnProcess(g_resources.getBinaryPath(), {}))
+        g_logger.fatal("Updater restart error. Please restart application");
+    std::quick_exit(0);
+#elif not(defined(ANDROID) || defined(FREE_VERSION))
     std::string binaryName = g_resources.getBinaryName();
     std::system(binaryName.c_str());
     std::this_thread::sleep_for(std::chrono::seconds(1));
