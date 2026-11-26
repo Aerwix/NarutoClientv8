@@ -302,6 +302,7 @@
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='DirectX|Win32'">FW_GRAPHICS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='DirectX|x64'">FW_GRAPHICS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
+    <ClCompile Include="..\src\framework\discord\discord.cpp" />
     <ClCompile Include="..\src\framework\core\eventdispatcher.cpp" />
     <ClCompile Include="..\src\framework\core\filestream.cpp" />
     <ClCompile Include="..\src\framework\core\graphicalapplication.cpp" />
@@ -455,6 +456,8 @@
     <ClInclude Include="..\src\framework\core\configmanager.h" />
     <ClInclude Include="..\src\framework\core\declarations.h" />
     <ClInclude Include="..\src\framework\core\event.h" />
+    <ClInclude Include="..\src\framework\discord\discord.h" />
+    <ClInclude Include="..\src\framework\discord_config.h" />
     <ClInclude Include="..\src\framework\core\eventdispatcher.h" />
     <ClInclude Include="..\src\framework\core\filestream.h" />
     <ClInclude Include="..\src\framework\core\graphicalapplication.h" />

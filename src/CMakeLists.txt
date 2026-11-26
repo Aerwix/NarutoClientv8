@@ -277,6 +277,9 @@ set(SOURCE_FILES
 	framework/core/configmanager.cpp
 	framework/core/event.cpp
 	framework/core/eventdispatcher.cpp
+
+	# discord rich presence
+	framework/discord/discord.cpp
 	framework/core/filestream.cpp
 	framework/core/graphicalapplication.cpp
 	framework/core/logger.cpp

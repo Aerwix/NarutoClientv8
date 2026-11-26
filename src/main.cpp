@@ -29,6 +29,13 @@
 #include <framework/platform/platformwindow.h>
 #include <client/client.h>
 
+#include <framework/discord_config.h>
+#if ENABLE_DISCORD_RPC == 1
+#include <framework/discord/discord.h>
+#include <client/game.h>
+#include <client/localplayer.h>
+#endif
+
 int main(int argc, const char* argv[]) {
     std::vector<std::string> args(argv, argv + argc);
 
@@ -101,8 +108,52 @@ int main(int argc, const char* argv[]) {
     LoadLibraryA("progdn32.dll");
 #endif
 
+#if ENABLE_DISCORD_RPC == 1
+    g_discord.init(
+        [] { return g_game.isOnline(); },
+        [](std::string& info) {
+#if SHOW_CHARACTER_NAME_RPC == 1
+            info = g_game.getCharacterName();
+#endif
+#if SHOW_CHARACTER_LEVEL_RPC == 1
+            if (const auto& player = g_game.getLocalPlayer()) {
+                const std::string level = std::to_string(static_cast<int>(player->getLevel()));
+                info += info.empty() ? "Level " + level : " (Lv. " + level + ")";
+            }
+#endif
+#if SHOW_CHARACTER_WORLD_RPC == 1
+            const std::string world = g_game.getWorldName();
+            if (!world.empty())
+                info += (info.empty() ? "" : RPC_SEPARATOR) + world;
+#endif
+        },
+        [](std::string& state) {
+            const auto& player = g_game.getLocalPlayer();
+            if (!player)
+                return;
+#if SHOW_CHARACTER_VOCATION_RPC == 1
+            // vocation arrives as clientid (vocations.xml on the server)
+            const int vocation = player->getVocation();
+            constexpr int vocationCount = sizeof(RPC_VOCATION_NAMES) / sizeof(RPC_VOCATION_NAMES[0]);
+            if (vocation > 0 && vocation < vocationCount)
+                state = RPC_VOCATION_NAMES[vocation];
+#endif
+#if SHOW_CHARACTER_GUILD_RPC == 1
+            // guild name arrives as the creature title (module game_guildTitle, opcode 134)
+            const std::string guild = player->getTitle();
+            if (!guild.empty())
+                state += (state.empty() ? "" : RPC_SEPARATOR) + guild;
+#endif
+        },
+        [] { return g_game.getCharacterName(); });
+#endif
+
     // the run application main loop
     g_app.run();
+
+#if ENABLE_DISCORD_RPC == 1
+    g_discord.terminate();
+#endif
 
 #ifdef CRASH_HANDLER
     uninstallCrashHandler();
